@@ -10,6 +10,7 @@ from app.routers.traffic import router as traffic_router
 from app.routers.industrial import router as industrial_router
 from app.routers.climate import router as climate_router
 from app.routers.chat import router as chat_router
+from app.routers.diagnostics import router as diagnostics_router
 
 __all__ = [
     "health_router",
@@ -24,4 +25,5 @@ __all__ = [
     "industrial_router",
     "climate_router",
     "chat_router",
+    "diagnostics_router",
 ]

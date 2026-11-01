@@ -17,6 +17,7 @@ from app.routers import (
     industrial_router,
     climate_router,
     chat_router,
+    diagnostics_router,
 )
 
 
@@ -56,6 +57,7 @@ app.include_router(traffic_router)
 app.include_router(industrial_router)
 app.include_router(climate_router)
 app.include_router(chat_router)
+app.include_router(diagnostics_router)
 
 
 @app.get("/", tags=["Root"])
