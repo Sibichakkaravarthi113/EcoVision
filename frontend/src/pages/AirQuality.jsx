@@ -108,12 +108,12 @@ export default function AirQuality() {
       return readings
         .filter((r) => r.latitude && r.longitude)
         .map((r) => {
-          const cat = getAQICategory(r.value, r.pollutant);
+          const cat = getAQICategory(r.value, r.parameter);
           return {
             lat: Number(r.latitude),
             lng: Number(r.longitude),
-            label: `${r.station || 'Station'} (${r.pollutant || 'PM2.5'})`,
-            title: r.station || 'Monitoring Station',
+            label: `${r.station_name || 'Station'} (${r.parameter || 'Pollutant'})`,
+            title: r.station_name || 'Monitoring Station',
             value: r.value,
             unit: r.unit || 'µg/m³',
             status: cat.label,
@@ -123,37 +123,21 @@ export default function AirQuality() {
     }
 
     // Fallback marker based on summary
-    if (summary) {
-      const base = resolveCoordinates(location.city, location.state);
-      const cat = getAQICategory(summary.avg_pm25 || 45, 'PM2.5');
-      return [
-        {
-          lat: base[0],
-          lng: base[1],
-          label: `${location.city || location.state || 'Regional'} Air Monitoring Station`,
-          title: 'Ambient Air Quality Sensor',
-          value: summary.avg_pm25 || 45,
-          unit: 'µg/m³ PM2.5',
-          status: cat.label,
-          color: cat.color
-        }
-      ];
-    }
     return [];
   }, [readings, summary, location.city, location.state]);
 
   // Chart data: Pollutant averages
   const pollutantChartData = useMemo(() => {
-    if (summary?.pollutant_averages) {
-      return Object.entries(summary.pollutant_averages).map(([k, v]) => ({
-        pollutant: k,
-        value: typeof v === 'number' ? Math.round(v * 10) / 10 : Number(v)
+    if (summary?.pollutants?.length) {
+      return summary.pollutants.map((item) => ({
+        pollutant: item.parameter,
+        value: Number(item.avg_value)
       }));
     }
     if (readings.length > 0) {
       const map = {};
       readings.forEach((r) => {
-        const pol = r.pollutant || 'PM2.5';
+        const pol = r.parameter || 'Unknown';
         if (!map[pol]) map[pol] = { sum: 0, count: 0 };
         map[pol].sum += Number(r.value) || 0;
         map[pol].count += 1;
@@ -170,7 +154,7 @@ export default function AirQuality() {
   const stationChartData = useMemo(() => {
     if (readings.length > 0) {
       return readings.slice(0, 15).map((r, i) => ({
-        name: r.station ? (r.station.length > 14 ? r.station.substring(0, 14) + '...' : r.station) : `Stn ${i + 1}`,
+        name: r.station_name ? (r.station_name.length > 14 ? r.station_name.substring(0, 14) + '...' : r.station_name) : `Stn ${i + 1}`,
         value: Number(r.value) || 0
       }));
     }
@@ -245,7 +229,7 @@ export default function AirQuality() {
           <div className="grid-3">
             <StatCard
               title="Average PM2.5 Concentration"
-              value={summary?.avg_pm25 ?? (readings.find(r => r.pollutant === 'PM2.5')?.value ?? '38.4')}
+              value={summary?.pollutants?.find((item) => item.parameter === 'PM2.5')?.avg_value ?? '—'}
               unit="µg/m³"
               subtitle="NAAQS Safe Threshold: <60 µg/m³"
               icon={Wind}
@@ -256,7 +240,7 @@ export default function AirQuality() {
 
             <StatCard
               title="Active Monitoring Stations"
-              value={summary?.active_stations ?? readings.length ?? 18}
+              value={summary?.station_count ?? readings.length}
               unit="Stations"
               subtitle="Continuous Ambient Air Quality Monitoring"
               icon={Activity}
@@ -265,7 +249,7 @@ export default function AirQuality() {
 
             <StatCard
               title="Dominant / Worst Pollutant"
-              value={summary?.worst_pollutant ?? 'PM2.5'}
+              value={summary?.pollutants?.[0]?.parameter ?? '—'}
               unit=""
               subtitle="Contributing most to Air Quality Index"
               icon={AlertOctagon}
@@ -327,13 +311,13 @@ export default function AirQuality() {
                 </thead>
                 <tbody>
                   {readings.slice(0, 30).map((r, i) => {
-                    const cat = getAQICategory(r.value, r.pollutant);
+                    const cat = getAQICategory(r.value, r.parameter);
                     return (
                       <tr key={r.id || `aq-${i}`}>
-                        <td style={{ fontWeight: 600 }}>{r.station || `Station ${i + 1}`}</td>
+                        <td style={{ fontWeight: 600 }}>{r.station_name || `Station ${i + 1}`}</td>
                         <td>{r.city || location.city || r.district || 'Regional'}</td>
                         <td>
-                          <span className="badge badge-gray">{r.pollutant || 'PM2.5'}</span>
+                          <span className="badge badge-gray">                          {r.parameter || 'Unknown'}</span>
                         </td>
                         <td style={{ fontWeight: 600 }}>
                           {r.value} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{r.unit || 'µg/m³'}</span>
@@ -344,7 +328,7 @@ export default function AirQuality() {
                           </span>
                         </td>
                         <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                          {r.date || r.timestamp || 'Recent'}
+                          {r.observed_at || 'Date unavailable'}
                         </td>
                       </tr>
                     );

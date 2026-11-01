@@ -36,7 +36,8 @@ export default function GreenCoverage() {
           limit: 100
         }),
         getGreenCoverageSummary({
-          state: location.state || undefined
+          state: location.state || undefined,
+          demo: demoMode ? true : undefined
         })
       ]);
 
@@ -69,12 +70,12 @@ export default function GreenCoverage() {
       return districtsData
         .filter((d) => d.latitude && d.longitude)
         .map((d) => {
-          const pct = Number(d.coverage_percentage) || Number(d.forest_percentage) || 20;
+          const pct = Number(d.forest_cover_percent) || 0;
           return {
             lat: Number(d.latitude),
             lng: Number(d.longitude),
-            label: `${d.district || 'District'} (${pct}% Forest)`,
-            title: `${d.district} Forest Division`,
+            label: `${d.district_name || 'District'} (${pct}% Forest)`,
+            title: `${d.district_name || 'District'} Forest Division`,
             value: pct,
             unit: '% cover',
             radius: Math.max(6, Math.min(22, Math.round(pct / 3))),
@@ -86,7 +87,7 @@ export default function GreenCoverage() {
 
     if (summary) {
       const base = resolveCoordinates(location.city, location.state);
-      const pct = Number(summary.forest_cover_percentage) || 24;
+      const pct = Number(summary.avg_forest_cover_percent) || 0;
       return [
         {
           lat: base[0],
@@ -108,8 +109,8 @@ export default function GreenCoverage() {
   const districtBarChartData = useMemo(() => {
     if (districtsData.length > 0) {
       return districtsData.slice(0, 10).map((d) => ({
-        name: d.district ? (d.district.length > 11 ? d.district.substring(0, 11) + '..' : d.district) : 'District',
-        percentage: Number(d.coverage_percentage || d.forest_percentage || 0)
+        name: d.district_name ? (d.district_name.length > 11 ? d.district_name.substring(0, 11) + '..' : d.district_name) : 'District',
+        percentage: Number(d.forest_cover_percent) || 0
       }));
     }
     return [];
@@ -117,26 +118,19 @@ export default function GreenCoverage() {
 
   // Breakdown chart: VDF vs MDF vs Open Forest
   const forestTypeChartData = useMemo(() => {
-    if (summary?.canopy_breakdown) {
-      return [
-        { name: 'Very Dense (VDF)', area: summary.canopy_breakdown.vdf || 420 },
-        { name: 'Mod. Dense (MDF)', area: summary.canopy_breakdown.mdf || 860 },
-        { name: 'Open Forest (OF)', area: summary.canopy_breakdown.open || 580 }
-      ];
-    }
     if (districtsData.length > 0) {
       let vdfSum = 0;
       let mdfSum = 0;
       let openSum = 0;
       districtsData.forEach((d) => {
-        vdfSum += Number(d.vdf_area || d.very_dense_forest || 0);
-        mdfSum += Number(d.mdf_area || d.moderately_dense_forest || 0);
-        openSum += Number(d.open_forest_area || d.open_forest || 0);
+        vdfSum += Number(d.very_dense_forest) || 0;
+        mdfSum += Number(d.moderate_dense_forest) || 0;
+        openSum += Number(d.open_forest) || 0;
       });
       return [
-        { name: 'Very Dense (VDF)', area: Math.round(vdfSum) || 450 },
-        { name: 'Mod. Dense (MDF)', area: Math.round(mdfSum) || 980 },
-        { name: 'Open Forest (OF)', area: Math.round(openSum) || 620 }
+        { name: 'Very Dense (VDF)', area: Math.round(vdfSum) },
+        { name: 'Mod. Dense (MDF)', area: Math.round(mdfSum) },
+        { name: 'Open Forest (OF)', area: Math.round(openSum) }
       ];
     }
     return [];
@@ -193,7 +187,7 @@ export default function GreenCoverage() {
           <div className="grid-3">
             <StatCard
               title="Total Recorded Forest Area"
-              value={summary?.total_forest_area_sqkm ?? (districtsData.reduce((acc, d) => acc + (Number(d.forest_area) || 0), 0) || '2,480')}
+              value={summary?.total_forest_area_sqkm ?? 0}
               unit="sq km"
               subtitle="Recorded Forest Area (RFA)"
               icon={Trees}
@@ -202,7 +196,7 @@ export default function GreenCoverage() {
 
             <StatCard
               title="Forest Cover Percentage"
-              value={summary?.forest_cover_percentage ?? '28.6'}
+              value={summary?.avg_forest_cover_percent ?? 0}
               unit="%"
               subtitle="National Forest Policy Target: 33%"
               icon={Compass}
@@ -211,7 +205,7 @@ export default function GreenCoverage() {
 
             <StatCard
               title="Very Dense Forest (VDF)"
-              value={summary?.vdf_area_sqkm ?? '640'}
+              value={summary?.very_dense_forest_sqkm ?? districtsData.reduce((acc, d) => acc + (Number(d.very_dense_forest) || 0), 0)}
               unit="sq km"
               subtitle="Canopy Density > 70%"
               icon={MapPin}

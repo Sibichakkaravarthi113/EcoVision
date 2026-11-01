@@ -9,9 +9,10 @@ export function getNoisePollution({ state, city, locationType, demo, skip = 0, l
   return api.get('/api/noise', { params });
 }
 
-export function getNoiseSummary({ state, demo } = {}) {
+export function getNoiseSummary({ state, city, demo } = {}) {
   const params = {};
   if (state) params.state = state;
+  if (city) params.city = city;
   if (demo !== undefined) params.demo = demo;
   return api.get('/api/noise/summary', { params });
 }

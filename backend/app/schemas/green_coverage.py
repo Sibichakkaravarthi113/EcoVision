@@ -17,5 +17,6 @@ class GreenCoverageSummaryResponse(BaseModel):
     state: str
     total_forest_area_sqkm: float
     avg_forest_cover_percent: float
+    very_dense_forest_sqkm: float
     total_geographic_area_sqkm: float
     district_count: int

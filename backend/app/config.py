@@ -13,11 +13,15 @@ DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{DATABASE_PATH.as_posix()}"
 DATA_GOV_IN_API_KEY = os.getenv("DATA_GOV_IN_API_KEY", "")
 
 
-CORS_ORIGINS = [
+DEFAULT_CORS_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://eco-vision-wheat.vercel.app",
 ]
-
+CORS_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", ",".join(DEFAULT_CORS_ORIGINS)).split(",")
+    if origin.strip()
+]

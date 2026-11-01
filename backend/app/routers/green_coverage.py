@@ -56,14 +56,16 @@ def get_green_coverage_summary(
         query = query.filter(GreenCoverage.is_demo == demo)
 
     total_forest = query.with_entities(func.sum(GreenCoverage.total_forest_area_sqkm)).scalar() or 0.0
-    avg_pct = query.with_entities(func.avg(GreenCoverage.forest_cover_percent)).scalar() or 0.0
     total_geo = query.with_entities(func.sum(GreenCoverage.geographic_area_sqkm)).scalar() or 0.0
+    avg_pct = (total_forest / total_geo * 100) if total_geo else 0.0
+    very_dense = query.with_entities(func.sum(GreenCoverage.very_dense_forest)).scalar() or 0.0
     count = query.count()
 
     return GreenCoverageSummaryResponse(
         state=state,
         total_forest_area_sqkm=round(total_forest, 2),
         avg_forest_cover_percent=round(avg_pct, 2),
+        very_dense_forest_sqkm=round(very_dense, 2),
         total_geographic_area_sqkm=round(total_geo, 2),
         district_count=count,
     )

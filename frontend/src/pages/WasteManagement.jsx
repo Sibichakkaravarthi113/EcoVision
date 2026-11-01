@@ -75,7 +75,7 @@ export default function WasteManagement() {
             lng: Number(r.longitude),
             label: `${r.city || 'City'} (${recRate}% Recycled)`,
             title: `${r.city} Municipal Waste Facility`,
-            value: r.waste_generated_tpd || r.generated_tpd || 120,
+            value: r.generated_tonnes_day || 0,
             unit: 'TPD Generated',
             status: recRate >= 65 ? 'High Efficiency' : 'Standard Processing',
             color: recRate >= 65 ? '#10b981' : '#f59e0b'
@@ -91,7 +91,7 @@ export default function WasteManagement() {
           lng: base[1],
           label: `${location.city || location.state || 'Municipal'} Waste Center`,
           title: 'Integrated Waste Management Facility',
-          value: summary.total_generated_tpd || 650,
+          value: summary.total_generated_tonnes_day || 0,
           unit: 'TPD Generated',
           status: 'Operational Processing',
           color: '#10b981'
@@ -106,9 +106,9 @@ export default function WasteManagement() {
     if (records.length > 0) {
       return records.slice(0, 8).map((r) => ({
         name: r.city ? (r.city.length > 10 ? r.city.substring(0, 10) + '..' : r.city) : 'City',
-        Generated: Number(r.waste_generated_tpd || r.generated_tpd || 0),
-        Collected: Number(r.waste_collected_tpd || r.collected_tpd || 0),
-        Processed: Number(r.waste_processed_tpd || r.processed_tpd || 0)
+        Generated: Number(r.generated_tonnes_day) || 0,
+        Collected: Number(r.collected_tonnes_day) || 0,
+        Processed: Number(r.processed_tonnes_day) || 0
       }));
     }
     return [];
@@ -165,7 +165,7 @@ export default function WasteManagement() {
           <div className="grid-3">
             <StatCard
               title="Daily Waste Generated"
-              value={summary?.total_generated_tpd ?? (records.reduce((acc, r) => acc + (Number(r.waste_generated_tpd) || 0), 0) || '1,840')}
+              value={summary?.total_generated_tonnes_day ?? records.reduce((acc, r) => acc + (Number(r.generated_tonnes_day) || 0), 0)}
               unit="TPD"
               subtitle="Tonnes Per Day (TPD)"
               icon={Trash2}
@@ -174,7 +174,7 @@ export default function WasteManagement() {
 
             <StatCard
               title="Collection Efficiency"
-              value={summary?.collection_efficiency_pct ?? '92.4'}
+              value={summary?.collection_efficiency_percent ?? 0}
               unit="%"
               subtitle="Door-to-door segregated collection"
               icon={Truck}
@@ -183,7 +183,7 @@ export default function WasteManagement() {
 
             <StatCard
               title="Recycling & Recovery Rate"
-              value={summary?.recycling_rate_pct ?? '64.8'}
+              value={summary?.avg_recycling_percent ?? 0}
               unit="%"
               subtitle="Material Recovery Facility (MRF) diversion"
               icon={Recycle}
@@ -238,7 +238,7 @@ export default function WasteManagement() {
                     return (
                       <tr key={r.id || `wm-${i}`}>
                         <td style={{ fontWeight: 600 }}>{r.city || `City ${i + 1}`}</td>
-                        <td>{r.waste_generated_tpd || r.generated_tpd || '—'} TPD</td>
+                        <td>{r.generated_tonnes_day ?? '—'} TPD</td>
                         <td>{r.waste_collected_tpd || r.collected_tpd || '—'} TPD</td>
                         <td style={{ fontWeight: 600 }}>{r.waste_processed_tpd || r.processed_tpd || '—'} TPD</td>
                         <td>

@@ -46,10 +46,13 @@ export default function NoisePollution() {
           demo: demoMode ? true : undefined,
           limit: 100
         }),
-        getNoiseSummary({
-          state: location.state || undefined,
-          demo: demoMode ? true : undefined
-        })
+        location.city
+          ? getNoiseSummary({
+              state: location.state || undefined,
+              city: location.city,
+              demo: demoMode ? true : undefined
+            })
+          : Promise.resolve(null)
       ]);
 
       setRecords(Array.isArray(resData) ? resData : (resData?.items || []));
@@ -116,7 +119,7 @@ export default function NoisePollution() {
           lng: base[1],
           label: `${location.city || location.state || 'Urban'} Ambient Acoustic Station`,
           title: 'Ambient Acoustic Sensor',
-          value: summary.avg_day_db || 62,
+          value: summary.levels?.[0]?.avg_day_db || 0,
           unit: 'dB(A) Day',
           status: 'Within Standard',
           color: '#10b981'
@@ -222,7 +225,7 @@ export default function NoisePollution() {
           <div className="grid-3">
             <StatCard
               title="Average Day Sound Level"
-              value={summary?.avg_day_db ?? '62.4'}
+              value={summary?.levels?.length ? (summary.levels.reduce((sum, level) => sum + level.avg_day_db, 0) / summary.levels.length).toFixed(1) : '—'}
               unit="dB(A)"
               subtitle="CPCB Day Period: 06:00 – 22:00"
               icon={Volume2}
@@ -231,7 +234,7 @@ export default function NoisePollution() {
 
             <StatCard
               title="Average Night Sound Level"
-              value={summary?.avg_night_db ?? '51.8'}
+              value={summary?.levels?.length ? (summary.levels.reduce((sum, level) => sum + level.avg_night_db, 0) / summary.levels.length).toFixed(1) : '—'}
               unit="dB(A)"
               subtitle="CPCB Night Period: 22:00 – 06:00"
               icon={Moon}

@@ -1,8 +1,8 @@
 
 import axios from 'axios';
 
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? 'https://ecovision-e47x.onrender.com' : 'http://localhost:8000');
 
 export const api = axios.create({
   baseURL: BASE_URL,
@@ -18,10 +18,12 @@ api.interceptors.response.use(
     let message = 'An unexpected network error occurred';
 
     if (error.response) {
-      message =
-        error.response.data?.detail ||
-        error.response.data?.message ||
-        `Error ${error.response.status}: ${error.response.statusText}`;
+      const detail = error.response.data?.detail || error.response.data?.message;
+      message = typeof detail === 'string'
+        ? detail
+        : Array.isArray(detail)
+          ? detail.map((item) => item.msg || JSON.stringify(item)).join('; ')
+          : detail ? JSON.stringify(detail) : `Error ${error.response.status}: ${error.response.statusText}`;
     } else if (error.request) {
       message = 'EcoVision backend server is not reachable.';
     } else {

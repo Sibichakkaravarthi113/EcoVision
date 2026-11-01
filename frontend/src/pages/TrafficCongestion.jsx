@@ -39,10 +39,13 @@ export default function TrafficCongestion() {
           demo: demoMode ? true : undefined,
           limit: 100
         }),
-        getTrafficSummary({
-          state: location.state || undefined,
-          demo: demoMode ? true : undefined
-        })
+        location.city
+          ? getTrafficSummary({
+              state: location.state || undefined,
+              city: location.city,
+              demo: demoMode ? true : undefined
+            })
+          : Promise.resolve(null)
       ]);
 
       setRecords(Array.isArray(resData) ? resData : (resData?.items || []));
@@ -192,7 +195,7 @@ export default function TrafficCongestion() {
           <div className="grid-3">
             <StatCard
               title="Average Arterial Speed"
-              value={summary?.avg_speed_kmh ?? '31.5'}
+              value={summary?.avg_speed_kmh ?? '—'}
               unit="km/h"
               subtitle="Citywide transit velocity"
               icon={Gauge}
@@ -201,7 +204,7 @@ export default function TrafficCongestion() {
 
             <StatCard
               title="Average Vehicle Flow"
-              value={summary?.avg_vehicles_per_hour ?? (Math.round(records.reduce((acc, r) => acc + (Number(r.vehicles_per_hour) || 0), 0) / (records.length || 1)) || '2,150')}
+              value={records.length ? Math.round(records.reduce((acc, r) => acc + (Number(r.vehicle_count_hour) || 0), 0) / records.length) : '—'}
               unit="Vehicles/hr"
               subtitle="Peak corridor throughput"
               icon={Car}
@@ -210,7 +213,7 @@ export default function TrafficCongestion() {
 
             <StatCard
               title="Critical Bottlenecks"
-              value={summary?.severe_congestion_roads_count ?? records.filter(r => (r.congestion_level || '').toLowerCase() === 'severe' || (r.congestion_level || '').toLowerCase() === 'heavy').length}
+              value={summary?.congestion_breakdown?.Severe ?? summary?.congestion_breakdown?.severe ?? 0}
               unit="Corridors"
               subtitle="Experiencing severe slowdowns"
               icon={AlertCircle}

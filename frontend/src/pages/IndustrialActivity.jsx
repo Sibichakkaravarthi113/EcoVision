@@ -104,7 +104,7 @@ export default function IndustrialActivity() {
           lng: base[1],
           label: `${location.district || location.state || 'Industrial'} Cluster Zone`,
           title: 'Industrial Manufacturing Cluster',
-          value: '91% Compliant',
+          value: `${summary?.compliance_percent ?? 0}% Compliant`,
           status: 'Continuous Emission Monitoring Active',
           color: '#10b981'
         }
@@ -115,8 +115,8 @@ export default function IndustrialActivity() {
 
   // Bar chart: Industries by type
   const typeChartData = useMemo(() => {
-    if (summary?.type_breakdown) {
-      return Object.entries(summary.type_breakdown).map(([k, v]) => ({
+    if (summary?.industry_type_breakdown) {
+      return Object.entries(summary.industry_type_breakdown).map(([k, v]) => ({
         name: k,
         units: Number(v)
       }));
@@ -147,11 +147,6 @@ export default function IndustrialActivity() {
         nonCompliantCount += 1;
       }
     });
-
-    if (compliantCount + nonCompliantCount === 0) {
-      compliantCount = 84;
-      nonCompliantCount = 12;
-    }
 
     return [
       { name: 'Compliant Units', count: compliantCount },
@@ -237,7 +232,7 @@ export default function IndustrialActivity() {
 
             <StatCard
               title="Environmental Compliance Rate"
-              value={summary?.compliance_percentage ?? '88.4'}
+              value={summary?.compliance_percent ?? 0}
               unit="%"
               subtitle="Meeting SPCB effluent & emission limits"
               icon={ShieldCheck}

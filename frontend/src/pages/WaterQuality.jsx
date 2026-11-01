@@ -112,8 +112,8 @@ export default function WaterQuality() {
           return {
             lat: Number(r.latitude),
             lng: Number(r.longitude),
-            label: `${r.station || 'Water Station'} - ${r.parameter || 'Water Test'}`,
-            title: r.station || 'Water Monitoring Station',
+            label: `${r.station_name || 'Water Station'} - ${r.parameter || 'Water Test'}`,
+            title: r.station_name || 'Water Monitoring Station',
             value: r.value,
             unit: r.unit || '',
             status: assessment.label,
@@ -122,21 +122,6 @@ export default function WaterQuality() {
         });
     }
 
-    if (summary) {
-      const base = resolveCoordinates(location.city, location.state);
-      return [
-        {
-          lat: base[0],
-          lng: base[1],
-          label: `${location.state || 'River Basin'} Hydrological Station`,
-          title: 'River Basin Station',
-          value: summary.avg_ph || 7.4,
-          unit: 'pH',
-          status: 'Optimal (BIS: 6.5-8.5)',
-          color: '#10b981'
-        }
-      ];
-    }
     return [];
   }, [readings, summary, location.city, location.state]);
 
@@ -144,7 +129,7 @@ export default function WaterQuality() {
   const stationBarChartData = useMemo(() => {
     if (readings.length > 0) {
       return readings.slice(0, 12).map((r, i) => ({
-        name: r.station ? (r.station.length > 12 ? r.station.substring(0, 12) + '..' : r.station) : `Stn ${i + 1}`,
+        name: r.station_name ? (r.station_name.length > 12 ? r.station_name.substring(0, 12) + '..' : r.station_name) : `Stn ${i + 1}`,
         value: Number(r.value) || 0
       }));
     }
@@ -153,12 +138,9 @@ export default function WaterQuality() {
 
   // Chart: Trend over time
   const trendLineChartData = useMemo(() => {
-    if (summary?.historical_trend) {
-      return summary.historical_trend;
-    }
     if (readings.length > 0) {
       return readings.slice(0, 10).map((r, i) => ({
-        name: r.date || `Sample ${i + 1}`,
+        name: r.observed_at || `Sample ${i + 1}`,
         value: Number(r.value) || 0
       }));
     }
@@ -245,7 +227,7 @@ export default function WaterQuality() {
           <div className="grid-3">
             <StatCard
               title="Average pH Level"
-              value={summary?.avg_ph ?? '7.42'}
+              value={summary?.parameters?.find((item) => item.parameter.toLowerCase().includes('ph'))?.avg_value ?? '—'}
               unit="pH"
               subtitle="Permissible Range: 6.5 – 8.5"
               icon={Droplets}
@@ -254,7 +236,7 @@ export default function WaterQuality() {
 
             <StatCard
               title="Dissolved Oxygen (DO)"
-              value={summary?.avg_do ?? '6.8'}
+              value={summary?.parameters?.find((item) => item.parameter.toLowerCase().includes('dissolved oxygen'))?.avg_value ?? '—'}
               unit="mg/L"
               subtitle="Healthy Aquatic Threshold: >5.0 mg/L"
               icon={Activity}
@@ -263,7 +245,7 @@ export default function WaterQuality() {
 
             <StatCard
               title="Total Dissolved Solids (TDS)"
-              value={summary?.avg_tds ?? '240'}
+              value={summary?.parameters?.find((item) => item.parameter.toLowerCase().includes('tds'))?.avg_value ?? '—'}
               unit="mg/L"
               subtitle="Potable Drinking Standard: <500 mg/L"
               icon={Gauge}
@@ -328,7 +310,7 @@ export default function WaterQuality() {
                     const evalObj = assessParameter(r.parameter, r.value);
                     return (
                       <tr key={r.id || `wq-${idx}`}>
-                        <td style={{ fontWeight: 600 }}>{r.station || `Station ${idx + 1}`}</td>
+                        <td style={{ fontWeight: 600 }}>{r.station_name || `Station ${idx + 1}`}</td>
                         <td>{r.water_body || r.district || location.district || 'Surface River'}</td>
                         <td>
                           <span className="badge badge-gray">{r.parameter || 'pH'}</span>
@@ -342,7 +324,7 @@ export default function WaterQuality() {
                           </span>
                         </td>
                         <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                          {r.date || 'Recent Sample'}
+                          {r.observed_at || 'Date unavailable'}
                         </td>
                       </tr>
                     );
