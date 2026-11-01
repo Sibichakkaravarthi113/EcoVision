@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Backend runtime files and secrets
+backend/.env
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+
+# Logs and local tooling
+*.log
+*.local
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
