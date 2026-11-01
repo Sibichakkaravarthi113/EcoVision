@@ -149,12 +149,7 @@ export default function NoisePollution() {
         Night_dB: Math.round((stats.nightSum / stats.count) * 10) / 10
       }));
     }
-    return [
-      { name: 'Industrial', Day_dB: 71.4, Night_dB: 64.2 },
-      { name: 'Commercial', Day_dB: 66.8, Night_dB: 58.1 },
-      { name: 'Residential', Day_dB: 56.2, Night_dB: 47.9 },
-      { name: 'Silence Zone', Day_dB: 49.8, Night_dB: 41.3 }
-    ];
+    return [];
   }, [summary, records]);
 
   return (
